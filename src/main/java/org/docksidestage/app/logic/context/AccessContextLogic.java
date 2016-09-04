@@ -19,7 +19,6 @@ import javax.annotation.Resource;
 
 import org.dbflute.hook.AccessContext;
 import org.dbflute.optional.OptionalThing;
-import org.docksidestage.mylasta.action.MermaidlagUserBean;
 import org.lastaflute.core.time.TimeManager;
 import org.lastaflute.db.dbflute.accesscontext.AccessContextResource;
 
@@ -43,8 +42,8 @@ public class AccessContextLogic {
     }
 
     @FunctionalInterface
-    public static interface UserBeanSupplier {
-        OptionalThing<MermaidlagUserBean> supply();
+    public static interface UserInfoSupplier {
+        OptionalThing<Object> supply();
     }
 
     @FunctionalInterface
@@ -56,7 +55,7 @@ public class AccessContextLogic {
     //                                                                      Create Context
     //                                                                      ==============
 
-    public AccessContext create(AccessContextResource resource, UserTypeSupplier userTypeSupplier, UserBeanSupplier userBeanSupplier,
+    public AccessContext create(AccessContextResource resource, UserTypeSupplier userTypeSupplier, UserInfoSupplier userBeanSupplier,
             AppTypeSupplier appTypeSupplier) {
         final AccessContext context = new AccessContext();
         context.setAccessLocalDateTimeProvider(() -> timeManager.currentDateTime());
@@ -65,14 +64,15 @@ public class AccessContextLogic {
     }
 
     private String buildAccessUserTrace(AccessContextResource resource, UserTypeSupplier userTypeSupplier,
-            UserBeanSupplier userBeanSupplier, AppTypeSupplier appTypeSupplier) {
+            UserInfoSupplier userBeanSupplier, AppTypeSupplier appTypeSupplier) {
         // #change_it you can customize the user trace for common column
+        // example default style: "M:7,MRL,ProductListAction" or "_:_,MRL,ProductListAction"
         final StringBuilder sb = new StringBuilder();
         sb.append(userTypeSupplier.supply().orElse("_")).append(":");
-        sb.append(userBeanSupplier.supply().map(bean -> bean.getUserId()).orElse(-1));
+        sb.append(userBeanSupplier.supply().orElse("_"));
         sb.append(",").append(appTypeSupplier.supply()).append(",").append(resource.getModuleName());
         final String trace = sb.toString();
-        final int columnSize = 200;
+        final int columnSize = 200; // is same as e.g. REGISTER_USER
         return trace.length() > columnSize ? trace.substring(0, columnSize) : trace;
     }
 }
